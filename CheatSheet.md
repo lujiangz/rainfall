@@ -137,3 +137,54 @@ Güvenlik için ASLR'nin etkinleştirilmesi (2 değeri ile) önerilir.
 
 ---
 
+## Linux Executable Güvenlik Özellikleri
+
+**Mevcut Durum:**
+```
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH
+```
+
+### RELRO (RELocation Read-Only)
+**Status:** No RELRO
+
+RELRO, Global Offset Table (GOT) için bir koruma mekanizmasıdır. GOT yazma saldırılarına karşı koruma sağlar.
+- Full RELRO aktif edilmediğinde GOT üzerinden yapılacak saldırılara karşı savunmasız kalır
+- Derleme sırasında `-Wl,-z,relro,-z,now` flag'i ile aktif edilebilir
+
+### Stack Canary
+**Status:** No canary found
+
+Stack buffer overflow saldırılarını tespit etmek için kullanılan bir koruma mekanizmasıdır.
+- Yukarıda anlatılan stack protector özelliğinin binary'deki durumunu gösterir
+- Derleme sırasında `-fstack-protector-all` flag'i ile aktif edilebilir
+
+### NX (No eXecute)
+**Status:** Enabled
+
+Stack'in çalıştırılabilir olmasını engelleyen bir güvenlik özelliğidir.
+- Stack üzerinde kod çalıştırılmasını engeller
+- Buffer overflow saldırılarında shellcode çalıştırılmasını önler
+- Varsayılan olarak aktif durumdadır
+
+### PIE (Position Independent Executable)
+**Status:** Disabled
+
+ASLR için gerekli olan, programın belleğe rastgele yüklenmesini sağlayan özelliktir.
+- Aktif olmadığında program her zaman aynı bellek adresine yüklenir
+- Return Oriented Programming (ROP) saldırılarını kolaylaştırır
+- Derleme sırasında `-fPIE -pie` flagleri ile aktif edilebilir
+
+### RPATH/RUNPATH
+**Status:** Disabled
+
+Dinamik kütüphane arama yollarını belirten özelliklerdir.
+- Güvenlik açısından kapalı olması tercih edilir
+- Kötü amaçlı kütüphane yüklenmesini engellemek için kapalı tutulmalıdır
+
+**İyileştirme için önerilen derleme komutu:**
+```bash
+gcc -o program program.c -fstack-protector-all -fPIE -pie -Wl,-z,relro,-z,now
+```
+
+---
