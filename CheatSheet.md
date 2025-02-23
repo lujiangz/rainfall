@@ -188,3 +188,127 @@ gcc -o program program.c -fstack-protector-all -fPIE -pie -Wl,-z,relro,-z,now
 ```
 
 ---
+
+# x86 Assembly Girişi
+
+## 1. Register'lar (Kayıtçılar)
+Intel **x86** mimarisinde 32-bitlik birkaç önemli **register** bulunur. Bunlar, işlemci içinde **veri saklamak** ve **işlem yapmak** için kullanılır.
+
+| Register | Açıklama |
+|----------|---------|
+| **EAX** (Accumulator) | Ana işlem register'ı. Genellikle fonksiyonların dönüş değeri burada olur. |
+| **EBX** (Base) | Çeşitli işlemlerde kullanılan genel amaçlı bir register. |
+| **ECX** (Counter) | Döngüler ve sayma işlemleri için kullanılır. |
+| **EDX** (Data) | Genellikle büyük çarpma ve bölme işlemlerinde yardımcı register'dır. |
+| **EBP** (Base Pointer) | Stack içinde **fonksiyonun başlangıç adresini** tutar. |
+| **ESP** (Stack Pointer) | Stack’in en üst noktasını gösterir. |
+| **ESI** (Source Index) | Bellekten veri okuma işlemleri için kullanılır. |
+| **EDI** (Destination Index) | Belleğe veri yazma işlemlerinde kullanılır. |
+| **EIP** (Instruction Pointer) | Çalıştırılacak **bir sonraki komutun adresini** tutar. |
+
+---
+
+## 2. Assembly Komutları
+
+### 🔹 MOV (Taşıma Komutu)
+Veriyi bir **register'dan register'a**, **register'dan memory'ye** ya da **memory'den register'a** taşır.
+
+```assembly
+mov eax, 0x5       ; EAX register'ına 5 değerini koy
+mov ebx, eax       ; EBX register'ına EAX'teki değeri kopyala
+mov [ebp-4], eax   ; Stack’te (ebp - 4) adresine EAX değerini yaz
+```
+
+### 🔹 CALL (Fonksiyon Çağırma)
+Bir fonksiyon çağırmak için kullanılır.
+
+```assembly
+call function_name  ; function_name adlı fonksiyona git
+```
+
+### 🔹 RET (Return - Fonksiyon Bitirme)
+Fonksiyondan geri dönmek için kullanılır.
+
+```assembly
+ret  ; Stack’ten dönüş adresini al ve EIP’ye yükle
+```
+
+### 🔹 PUSH ve POP (Stack Manipülasyonu)
+`push`, bir değeri stack’e ekler, `pop` ise stack’ten bir değeri çıkarır.
+
+```assembly
+push eax  ; EAX içeriğini stack’e kaydet
+pop ebx   ; Stack’ten bir değer al, EBX’e yükle
+```
+
+### 🔹 LEAVE (Fonksiyondan Çıkış)
+Stack’i temizleyerek programın düzgün çalışmasını sağlar.
+
+```assembly
+leave  ; mov esp, ebp ve pop ebp komutlarını aynı anda yapar
+```
+
+---
+
+## 3. Stack Yapısı
+Stack, **LIFO (Last In First Out)** prensibiyle çalışır. Her **fonksiyon çağrıldığında stack’e veri eklenir**, fonksiyon bittiğinde ise veriler geri alınır.
+
+### Örnek Stack İşleyişi
+
+1. Fonksiyon çağrıldığında:
+   ```assembly
+   push ebp      ; Eski EBP’yi stack'e kaydet
+   mov ebp, esp  ; Yeni stack frame’i oluştur
+   sub esp, 0x10 ; Local değişkenler için stack’te yer aç
+   ```
+
+2. Stack yapısı şu hale gelir:
+   ```
+   ESP -> [local_var3]
+          [local_var2]
+          [local_var1]
+          [EBP eski değeri]  <- EBP buraya işaret ediyor
+          [return_address]  <- Fonksiyon dönüş adresi
+   ```
+
+3. Fonksiyon bitince stack temizlenir:
+   ```assembly
+   leave   ; Stack pointer eski haline gelir
+   ret     ; Fonksiyondan çıkılır
+   ```
+
+---
+
+## 4. Buffer Overflow Mantığı
+Bir program stack'te bir değişkenin içine **fazla veri** yazıldığında, fonksiyonun dönüş adresi üzerine taşma (overflow) gerçekleşebilir.
+
+### Örnek Buffer Overflow:
+```c
+void vuln() {
+    char buffer[32];
+    gets(buffer);  // Güvensiz input alıyor
+}
+```
+
+Stack'teki yerleşim (normal durum):
+```
+Yüksek Adresler
+[return address]     <- Fonksiyonun dönüş adresi
+[saved ebp]         <- Kaydedilmiş EBP değeri
+[buffer (32 byte)]  <- Bizim char array'imiz
+Düşük Adresler
+```
+
+Buffer overflow durumu:
+```
+Yüksek Adresler
+[return address]     <- Saldırgan tarafından değiştirilmiş adres
+[saved ebp]         <- Taşan veri
+[buffer (32 byte)]  <- 32 byte'tan fazla veri girildiğinde yukarı doğru taşar
+Düşük Adresler
+```
+
+Eğer buffer'a 32 byte'tan fazla veri girilirse, veri yukarı doğru taşarak önce saved ebp'yi, sonra return address'i ezer. Böylece fonksiyon return ettiğinde, program akışı saldırganın istediği adrese yönlendirilmiş olur.
+
+---
+
