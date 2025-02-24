@@ -280,7 +280,7 @@ Stack, **LIFO (Last In First Out)** prensibiyle çalışır. Her **fonksiyon ça
 ---
 
 ## 4. Buffer Overflow Mantığı
-Bir program stack'te bir değişkenin içine **fazla veri** yazıldığında, fonksiyonun dönüş adresi üzerine taşma (overflow) gerçekleşebilir.
+Bir program stack'te bir değişkenin içine **fazla veri** yazıldığında, fonksiyonun dönüş adresi üzerine yazma (overwrite) gerçekleşebilir.
 
 ### Örnek Buffer Overflow:
 ```c
