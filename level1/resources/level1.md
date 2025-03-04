@@ -35,8 +35,7 @@
  8048490:       e8 ab fe ff ff          call   8048340 <gets@plt>
 ```
 
-
-![buffer overflow](https://www.tenouk.com/Bufferoverflowc/Bufferoverflow3.html)
+https://www.tenouk.com/Bufferoverflowc/Bufferoverflow3.html
 
 ```
 qqq
