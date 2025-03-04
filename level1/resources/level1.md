@@ -36,9 +36,7 @@
 ```
 
 
-```
 ![buffer overflow](https://www.tenouk.com/Bufferoverflowc/Bufferoverflow3.html)
-```
 
 ```
 qqq
