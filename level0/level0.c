@@ -16,7 +16,7 @@ if (input == 0x1a7)
 	execv(arg, args);
 	} 
 else
-	fwrite("NO !\n", 7, 1, stdout);			
+	fwrite("NO !\n", 5, 1, stdout);			
 
 return 0;
 }
