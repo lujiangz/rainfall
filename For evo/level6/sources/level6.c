@@ -1,32 +1,39 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-void n(void)
-
-{
-  system("/bin/cat /home/user/level7/.pass");
-  return;
+// n() is the function we want to call. It prints the password.
+void n(void) {
+    system("/bin/cat /home/user/level7/.pass");
 }
 
-
-
-void m(void *param_1,int param_2,char *param_3,int param_4,int param_5)
-
-{
-  puts("Nope");
-  return;
+// m() is the function that is normally called.
+void m(void) {
+    puts("Nope");
 }
 
+// The main function contains a buffer overflow vulnerability.
+int main(int argc, char *argv[]) {
+    char *buffer;
+    void (**func_ptr)(void); // A pointer to a function pointer
 
+    // Allocate memory for a 64-byte buffer and a function pointer.
+    buffer = (char *)malloc(64);
+    func_ptr = malloc(sizeof(void *));
 
-void main(undefined4 param_1,int param_2)
+    // Make the function pointer point to the 'm' function.
+    *func_ptr = m;
 
-{
-  char *__dest;
-  undefined4 *puVar1;
-  
-  __dest = (char *)malloc(0x40);
-  puVar1 = (undefined4 *)malloc(4);
-  *puVar1 = m;
-  strcpy(__dest,*(char **)(param_2 + 4));
-  (*(code *)*puVar1)();
-  return;
+    // If an argument is provided, copy it into the buffer.
+    // VULNERABILITY: No size check is performed, allowing a buffer overflow.
+    // An attacker can overwrite the 'func_ptr' on the heap with the address of 'n'.
+    if (argc > 1) {
+        strcpy(buffer, argv[1]);
+    }
+
+    // Call the function pointed to by func_ptr.
+    // Normally this is m(), but can be changed to n() via the overflow.
+    (*func_ptr)();
+
+    return 0;
 }
