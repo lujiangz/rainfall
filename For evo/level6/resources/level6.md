@@ -72,3 +72,14 @@ Little-endian representation:
     ./level6 $(python -c 'print "A" * 72 + "\x54\x84\x04\x08"')
 
 This command sends a 76-byte payload as a command-line argument. The overflow replaces the function pointer with the address of n(). As a result, the program calls n().
+
+
+### Technical Deep Dive: Why the Overflow Works (Predictable `malloc` Behavior)
+
+A crucial question is why we can reliably assume the 4-byte function pointer is allocated immediately after the 64-byte buffer on the heap. While not a formal guarantee in complex applications, this behavior is highly predictable in this scenario due to the workings of the underlying memory allocator, **`ptmalloc`** (part of glibc).
+
+1.  **The Top Chunk**: When the program starts, the heap is a large, unused, contiguous area of memory known as the "wilderness" or **"top chunk"**.
+
+2.  **Servicing Consecutive Requests**: `ptmalloc` aims for speed and efficiency. When the first `malloc(64)` is called on a clean heap, the allocator simply carves a piece from the beginning of this top chunk. When the second `malloc(4)` is called immediately after, the fastest and most efficient action for `ptmalloc` is to continue where it left off, carving another small piece from the new start of the top chunk.
+
+3.  **Controlled Environment**: In a simple program like this CTF challenge, there are no other intervening `malloc` or `free` calls to fragment the heap. This lack of complexity makes the allocator's behavior deterministic. The result is two adjacent memory chunks, making the overflow predictable and successful. In a real-world, multi-threaded application, this adjacency would be far less likely.
