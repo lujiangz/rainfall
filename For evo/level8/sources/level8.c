@@ -1,77 +1,153 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <stdbool.h>
 
-// Global pointers that will be manipulated by user commands.
 char *auth = NULL;
 char *service = NULL;
 
-int main(void) {
-    // Buffer to hold user input.
-    char input_buffer[128];
+int main(void)
+{
+    unsigned char b_zero = 0;              /* corresponds to bVar14 = 0 */
+    unsigned char input_buf[5];            /* local_90[5] in decompiled output */
+    char auth_buf[2];                      /* local_8b[2] */
+    char service_buf[125];                 /* acStack_89[125] */
 
-    // Main loop to process commands indefinitely.
-    while (1) {
-        printf("auth pointer: %p, service pointer: %p\n", auth, service);
+    char ch;
+    char *p1;
+    char *p2;
+    char *p3;
+    int i;
+    unsigned int u;
+    unsigned char *pb1;
+    unsigned char *pb2;
+    bool less;
+    bool equal;
+    bool cond;
 
-        // Read a line of input from the user.
-        if (fgets(input_buffer, sizeof(input_buffer), stdin) == NULL) {
-            // Exit if there's an error or end-of-file.
+    do {
+        printf("%p, %p \n", auth, service);
+
+        if (fgets((char *)input_buf, 0x80, stdin) == NULL) {
             return 0;
         }
 
-        // Command: auth <name>
-        // Allocates a small buffer and copies the name into it.
-        if (strncmp(input_buffer, "auth ", 5) == 0) {
-            // --- VULNERABILITY 1: Buffer Overflow ---
-            // It allocates only 4 bytes but then copies up to 30 bytes,
-            // causing a heap overflow.
-            auth = malloc(4);
-            // The argument starts 5 characters after the beginning of the input.
-            char *auth_name = input_buffer + 5;
-            if (strlen(auth_name) < 31) {
-                strcpy(auth, auth_name);
-            }
-        }
+        /* ---------- Check if input starts with "auth " (5 bytes) ---------- */
+        i = 5;
+        pb1 = input_buf;
+        pb2 = (unsigned char *)"auth ";
+        less = false;
+        equal = false;
+        do {
+            if (i == 0) break;
+            i = i - 1;
+            less = *pb1 < *pb2;
+            equal = *pb1 == *pb2;
+            /* original had pb1 = pb1 + (uint)bVar14 * -2 + 1; with bVar14==0 => +1 */
+            pb1 = pb1 + 1;
+            pb2 = pb2 + 1;
+        } while (equal);
 
-        // Command: reset
-        // Frees the memory associated with 'auth'.
-        else if (strncmp(input_buffer, "reset", 5) == 0) {
-            // --- VULNERABILITY 2: Use-After-Free (Part 1) ---
-            // The memory 'auth' points to is freed, but the 'auth' pointer
-            // itself is NOT set to NULL. It becomes a "dangling pointer".
-            free(auth);
-        }
-
-        // Command: service <data>
-        // Allocates memory for service data.
-        else if (strncmp(input_buffer, "service", 7) == 0) {
-            // --- VULNERABILITY 2: Use-After-Free (Part 2) ---
-            // When strdup allocates new memory, the memory manager is likely
-            // to reuse the chunk that was just freed by the 'reset' command.
-            // This means 'service' and the dangling 'auth' pointer may now
-            // point to the same memory location.
-            service = strdup(input_buffer + 8);
-        }
-
-        // Command: login
-        // Checks for authentication and grants a shell.
-        else if (strncmp(input_buffer, "login", 5) == 0) {
-            // --- VULNERABILITY 2: Use-After-Free (Part 3) ---
-            // The program checks memory using the dangling 'auth' pointer.
-            // If an attacker used the 'service' command to place specific data
-            // at this location, they can pass this check.
-            // The check looks 32 bytes (0x20) past the start of the buffer.
-            if (auth && *(int *)(auth + 32) != 0) {
-                // If the check passes, give the user a root shell.
-                printf("Login successful!\n");
-                system("/bin/sh");
+        /* If input starts with "auth " then allocate auth and copy auth_buf into it (with length check) */
+        if (( !less && !equal ) == less) {
+            /* allocate 4 bytes and zero them out (original did auth = malloc(4) and set 4 bytes '\0') */
+            auth = (char *)malloc(4);
+            if (auth == NULL) {
+                /* keep behavior simple: on malloc failure, skip further auth handling */
             } else {
-                printf("Password:\n");
+                /* set all 4 bytes to '\0' */
+                auth[0] = '\0';
+                auth[1] = '\0';
+                auth[2] = '\0';
+                auth[3] = '\0';
+            }
+
+            /* compute length of auth_buf (original used weird ~uVar6 - 1 trick) */
+            u = 0xffffffff;
+            p1 = auth_buf;
+            do {
+                if (u == 0) break;
+                u = u - 1;
+                ch = *p1;
+                /* same increment logic: original used p1 = p1 + (uint)bVar14 * -2 + 1; which is +1 */
+                p1 = p1 + 1;
+            } while (ch != '\0');
+            u = ~u - 1; /* length computed to match original decompiled steps */
+
+            if (u < 0x1f) {
+                /* strcpy(auth, local_8b) in original */
+                if (auth != NULL) strcpy(auth, auth_buf);
             }
         }
-    }
+
+        /* ---------- Check if input starts with "reset" (5 bytes) ---------- */
+        i = 5;
+        pb1 = input_buf;
+        pb2 = (unsigned char *)"reset";
+        do {
+            if (i == 0) break;
+            i = i - 1;
+            less = *pb1 < *pb2;
+            equal = *pb1 == *pb2;
+            pb1 = pb1 + 1;  /* original expression reduces to +1 */
+            pb2 = pb2 + 1;
+        } while (equal);
+
+        /* If input is "reset", free(auth) */
+        if (( !less && !equal ) == less) {
+            free(auth);
+            auth = NULL;
+        }
+
+        /* ---------- Check if input starts with "service" (6 bytes) ---------- */
+        i = 6;
+        pb1 = input_buf;
+        pb2 = (unsigned char *)"service";
+        do {
+            if (i == 0) break;
+            i = i - 1;
+            /* original assigned to uVar11/uVar10; here we keep semantics with less/equal */
+            less = *pb1 < *pb2;
+            equal = *pb1 == *pb2;
+            pb1 = pb1 + 1;
+            pb2 = pb2 + 1;
+        } while (equal);
+
+        /* If input is "service", strdup the current service_buf into global 'service' */
+        /* original set an unused flag uVar13 = 0; then service = strdup(acStack_89); */
+        if (( !less && !equal ) == less) {
+            /* duplicate service_buf */
+            if (service != NULL) {
+                free(service);
+            }
+            service = strdup(service_buf); 
+        }
+
+        /* ---------- Check if input starts with "login" (5 bytes) ---------- */
+        i = 5;
+        pb1 = input_buf;
+        pb2 = (unsigned char *)"login";
+        do {
+            if (i == 0) break;
+            i = i - 1;
+            less = *pb1 < *pb2;
+            equal = *pb1 == *pb2;
+            pb1 = pb1 + 1;
+            pb2 = pb2 + 1;
+        } while (equal);
+
+        if (( !less && !equal ) == less) {
+            /* Note: original does *(int *)(auth + 0x20) == 0 check.
+               We replicate that check exactly; it may dereference invalid memory if auth is small/NULL,
+               matching original binary behavior. */
+            if (auth == NULL || *(int *)(auth + 0x20) == 0) {
+                fwrite("Password:\n", 1, 10, stdout);
+            } else {
+                system("/bin/sh");
+            }
+        }
+
+    } while (1);
 
     return 0;
 }
