@@ -140,7 +140,7 @@ int main(void)
             /* Note: original does *(int *)(auth + 0x20) == 0 check.
                We replicate that check exactly; it may dereference invalid memory if auth is small/NULL,
                matching original binary behavior. */
-            if (auth == NULL || *(int *)(auth + 0x20) == 0) {
+            if (auth == NULL || *(int *)(auth + 0x20) == 0) {      //0x20 == 32 bytes
                 fwrite("Password:\n", 1, 10, stdout);
             } else {
                 system("/bin/sh");
