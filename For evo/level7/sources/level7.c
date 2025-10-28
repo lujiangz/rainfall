@@ -3,7 +3,6 @@
 #include <string.h>
 #include <time.h>
 
-// Global buffer to store the password read from the file
 char c[0x44];  // 0x44 == 68 bytes
 
 void m(void *param_1, int param_2, char *param_3, int param_4, int param_5) {
@@ -25,7 +24,6 @@ int main(int argc, char **argv) {
     user2[0] = 2;           // user2 ID
     user2[1] = (int)name2;  // pointer to name2
 
-    // Copy command-line arguments into the user name buffers
     strcpy(name1, argv[1]);  // first input argument
     strcpy(name2, argv[2]);  // second input argument
 
