@@ -83,3 +83,8 @@ A crucial question is why we can reliably assume the 4-byte function pointer is 
 2.  **Servicing Consecutive Requests**: `ptmalloc` aims for speed and efficiency. When the first `malloc(64)` is called on a clean heap, the allocator simply carves a piece from the beginning of this top chunk. When the second `malloc(4)` is called immediately after, the fastest and most efficient action for `ptmalloc` is to continue where it left off, carving another small piece from the new start of the top chunk.
 
 3.  **Controlled Environment**: In a simple program like this CTF challenge, there are no other intervening `malloc` or `free` calls to fragment the heap. This lack of complexity makes the allocator's behavior deterministic. The result is two adjacent memory chunks, making the overflow predictable and successful. In a real-world, multi-threaded application, this adjacency would be far less likely.
+
+---
+
+> [!TIP]
+> Or just never mind all the offset calculation stuff, use [this tool](https://lujiangz.github.io/tools/pattern/index.html)
