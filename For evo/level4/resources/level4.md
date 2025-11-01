@@ -13,7 +13,8 @@ Since our m value is a large number like **16930116**, the same method we did in
 When it comes to finding offsets
 
 ```
-echo "AAAA%1\$x.%2\$x.%3\$x.%4\$x.%5\$x.%6\$x.%7\$x.%8\$x.%9\$x.%10\$x.%11\$x.%12\$x.%13\$x.%14\$x" | ./level4
+level4@RainFall:~$ echo "AAAA %p %p %p %p %p %p %p %p %p %p %p %p %p" | ./level4
+AAAA 0xb7ff26b0 0xbffff784 0xb7fd0ff4 (nil) (nil) 0xbffff748 0x804848d 0xbffff540 0x200 0xb7fd1ac0 0xb7ff37d0 0x41414141 0x20702520
 ```
 
 We have seen that the offset is at 12.
