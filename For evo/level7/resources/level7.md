@@ -129,6 +129,31 @@ Non-debugging symbols:
 0xb7e45ed0  __umoddi3
 ```
 
+```diff
++level7@RainFall:~$ ltrace ./level7 Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9
+__libc_start_main(0x8048521, 2, 0xbffff7c4, 0x8048610, 0x8048680 <unfinished ...>
+malloc(8)                                                                 = 0x0804a008
+malloc(8)                                                                 = 0x0804a018
+malloc(8)                                                                 = 0x0804a028
+malloc(8)                                                                 = 0x0804a038
+strcpy(0x0804a018, "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9")                      = 0x0804a018
++strcpy(0x37614136, NULL <unfinished ...>
+--- SIGSEGV (Segmentation fault) ---
++++ killed by SIGSEGV +++
+```
+
+You can use best pattern website :)
+```
+https://lujiangz.github.io/tools/pattern/index.html
+```
+
+So basically **0x37614136** this adress meaning 
+```
+Offset: 20 (0-based)
+```
+
+
+
 ## The Exploit Strategy: Redirecting Execution via `puts@got`
 
 Initially, the strategy was to directly overwrite `main`'s RET address with `m`'s address. However, even with ASLR disabled (which was confirmed not to randomize `m`'s address), this led to segmentation faults. This indicated issues with the stack alignment or `m`'s parameter expectations when directly jumping.
